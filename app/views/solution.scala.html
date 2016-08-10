@@ -1,4 +1,4 @@
-@(keyword: String,board: String,articles: List[Article], searchForm: Form[(String)])
+@(keyword: String,board: String,author: String,articles: List[Article], searchForm: Form[(String)])
 
 @import helper._
 @import play.api.Play.current
@@ -44,6 +44,8 @@
                                 <div class="row">
                                     <div class="col-xs-12">
                                         <div class="form-group">
+                                            <label>作者：</label>
+                                            <input type="text" name="author" class="form-control" placeholder="@author">
                                             <label>发布版面：</label>
                                             <select class="form-control" id="boardName" name="boardName">
                                                 <option value="none" selected="selected">所有版面</option>

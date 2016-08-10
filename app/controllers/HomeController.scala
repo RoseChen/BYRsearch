@@ -50,8 +50,9 @@ class HomeController @Inject()(val articleD : ArticleDao
 
   val filterForm = Form(
     tuple(
-    "boardName" -> nonEmptyText,
-    "keyword" -> nonEmptyText
+      "author" -> nonEmptyText,
+      "boardName" -> nonEmptyText,
+      "keyword" -> nonEmptyText
     )
   )
 
@@ -78,7 +79,7 @@ class HomeController @Inject()(val articleD : ArticleDao
       searchForm.bindFromRequest.value match{
         case Some(keyword) => {
           val re = searchK(keyword)
-          Future.successful(Ok(views.html.solution(keyword,"", re, searchForm)))
+          Future.successful(Ok(views.html.solution(keyword,"","ALL", re, searchForm)))
         }
         case _ =>
           Future.successful(Ok("提交不能为空"))
@@ -106,7 +107,6 @@ class HomeController @Inject()(val articleD : ArticleDao
           list = list ::: List(Article(a.get("url"),a.get("id"),a.get("firstId"),a.get("author"),a.get("boardName"),a.get("title"),a.get("content"),a.get("postTime"),a.get("fromIp")))
         }
       )
-      println(list)
       list
     }
     catch{
@@ -121,23 +121,47 @@ class HomeController @Inject()(val articleD : ArticleDao
   def filter = Action.async {
     implicit request =>
       filterForm.bindFromRequest.value match{
-        case Some((boardName,keyword)) => {
-          printf(boardName,keyword)
+        case Some((author,boardName,keyword)) => {
+          println(author,boardName,keyword)
           if(boardName == "none") {
-            Future.successful(Ok(views.html.solution(keyword,boardName, searchK(keyword), searchForm)))
+            if(author == "ALL"){
+              Future.successful(Ok(views.html.solution(keyword,boardName,author, searchK(keyword), searchForm)))
+            }
+            else {
+              var list: List[Article] = List()
+              searchK(keyword).foreach(
+                r => {
+                  if(r.author == author)
+                    list = list ::: List(r)
+                }
+              )
+              Future.successful(Ok(views.html.solution(keyword, boardName,author, list, searchForm)))
+            }
           }
           else {
-            var list: List[Article] = List()
-            searchK(keyword).foreach(
-              r => {
-                if(r.boardName == boardName)
-                  list = list ::: List(r)
-              }
-            )
-            Future.successful(Ok(views.html.solution(keyword,boardName, list, searchForm)))
+            if(author == "ALL") {
+              var list: List[Article] = List()
+              searchK(keyword).foreach(
+                r => {
+                  if(r.boardName == boardName)
+                    list = list ::: List(r)
+                }
+              )
+              Future.successful(Ok(views.html.solution(keyword, boardName,author, list, searchForm)))
+            }
+            else {
+              var list: List[Article] = List()
+              searchK(keyword).foreach(
+                r => {
+                  if(r.boardName == boardName && r.author == author)
+                    list = list ::: List(r)
+                }
+              )
+              Future.successful(Ok(views.html.solution(keyword, boardName,author, list, searchForm)))
+            }
           }
         }
-
       }
   }
 }
+
